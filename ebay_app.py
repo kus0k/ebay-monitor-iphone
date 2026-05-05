@@ -6,6 +6,7 @@ import requests
 from bs4 import BeautifulSoup
 import sys
 import re
+import json
 
 if sys.stdout.encoding != 'utf-8':
     sys.stdout.reconfigure(encoding='utf-8')
@@ -198,7 +199,6 @@ def stop():
 
 @app.route('/api/status')
 def status():
-    import json
     return app.response_class(
         response=json.dumps({
             'running': monitor.is_running,
