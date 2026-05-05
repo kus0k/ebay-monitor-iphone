@@ -90,10 +90,10 @@ class EbayMonitorWeb:
 
     def get_next_proxy(self):
         """Получает следующий прокси из списка"""
-        if not self.socks5_proxies:
+        if not self.proxies:
             return None
-        proxy = self.socks5_proxies[self.current_proxy_index]
-        self.current_proxy_index = (self.current_proxy_index + 1) % len(self.socks5_proxies)
+        proxy = self.proxies[self.current_proxy_index]
+        self.current_proxy_index = (self.current_proxy_index + 1) % len(self.proxies)
         return proxy
 
     def add_auction(self, title, price, bids, url):
