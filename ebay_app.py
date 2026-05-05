@@ -151,10 +151,6 @@ class EbayMonitorWeb:
             else:
                 self.log(f"🔍 Поиск: ВСЕ аукционы...")
 
-            current_proxy = self.get_next_proxy()
-            if current_proxy:
-                self.log(f"   🔗 Используется SOCKS5: {current_proxy}")
-
             # Парсим eBay напрямую
             if keyword:
                 url = f"https://www.ebay.com/sch/i.html?_nkw={keyword}&_sop=10"
@@ -171,15 +167,39 @@ class EbayMonitorWeb:
                 'Upgrade-Insecure-Requests': '1'
             }
 
-            try:
-                session = get_requests_session(current_proxy)
-                response = session.get(url, headers=headers, timeout=10)
-                response.raise_for_status()
-            except Exception as e:
-                self.log(f"   ⚠️ Не удалось подключиться к eBay: {str(e)}")
-                if not self.socks5_proxies:
+            response = None
+            last_error = None
+
+            # Пробуем прокси по очереди
+            if self.socks5_proxies:
+                for attempt in range(len(self.socks5_proxies)):
+                    current_proxy = self.get_next_proxy()
+                    self.log(f"   🔗 Попытка {attempt + 1}: SOCKS5 {current_proxy}")
+
+                    try:
+                        session = get_requests_session(current_proxy)
+                        response = session.get(url, headers=headers, timeout=10)
+                        response.raise_for_status()
+                        self.log(f"   ✓ Прокси работает: {current_proxy}")
+                        break
+                    except Exception as e:
+                        last_error = str(e)
+                        self.log(f"   ✗ Ошибка: {last_error[:80]}")
+                        continue
+
+                if not response:
+                    self.log(f"   ❌ Все прокси не работают")
+                    return
+            else:
+                # Без прокси
+                try:
+                    session = get_requests_session(None)
+                    response = session.get(url, headers=headers, timeout=10)
+                    response.raise_for_status()
+                except Exception as e:
+                    self.log(f"   ⚠️ Не удалось подключиться к eBay: {str(e)}")
                     self.log(f"   💡 Попробуй добавить SOCKS5 прокси для обхода блокировки.")
-                return
+                    return
 
             try:
                 soup = BeautifulSoup(response.content, 'html.parser')
