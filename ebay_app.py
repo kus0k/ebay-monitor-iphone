@@ -104,18 +104,19 @@ class EbayMonitorWeb:
             else:
                 self.log(f"🔍 Поиск: ВСЕ аукционы...")
 
-            # RapidAPI endpoint для eBay
-            url = "https://ebay-search.p.rapidapi.com/search"
+            # RapidAPI Real-Time eBay Data endpoint
+            url = "https://real-time-ebay-data.p.rapidapi.com/search"
 
             headers = {
                 "x-rapidapi-key": api_key,
-                "x-rapidapi-host": "ebay-search.p.rapidapi.com"
+                "x-rapidapi-host": "real-time-ebay-data.p.rapidapi.com"
             }
 
             params = {
                 "q": keyword if keyword else "auction",
                 "pageNumber": "1",
-                "pageSize": "100"
+                "pageSize": "100",
+                "sortBy": "endingSoonest"
             }
 
             response = requests.get(url, headers=headers, params=params, timeout=10)
@@ -123,8 +124,8 @@ class EbayMonitorWeb:
 
             data = response.json()
 
-            # Парсим результаты из RapidAPI
-            items = data.get('findItemsAdvancedResponse', [{}])[0].get('searchResult', [{}])[0].get('item', [])
+            # Парсим результаты
+            items = data.get('result', [])
 
             if not items:
                 self.log(f"   ⚠️ Результаты не найдены")
@@ -135,11 +136,11 @@ class EbayMonitorWeb:
 
             for item in items:
                 try:
-                    title = item.get('title', [''])[0]
-                    price = float(item.get('sellingStatus', [{}])[0].get('currentPrice', [{'__value__': 0}])[0].get('__value__', 0))
-                    bids = int(item.get('sellingStatus', [{}])[0].get('bidCount', [0])[0])
-                    item_url = item.get('viewItemURL', [''])[0]
-                    item_id = item.get('itemId', [''])[0]
+                    title = item.get('title', 'Unknown')
+                    price = float(item.get('price', 0))
+                    bids = int(item.get('bid_count', 0))
+                    item_url = item.get('item_url', '')
+                    item_id = item.get('item_id', '')
 
                     if price >= min_price and price <= max_price and bids >= min_bids:
                         auction_id = f"{title}_{item_id}"
