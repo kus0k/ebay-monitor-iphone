@@ -110,10 +110,18 @@ class EbayMonitorWeb:
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
             }
 
-            response = requests.get(url, headers=headers, timeout=10)
-            response.raise_for_status()
+            try:
+                response = requests.get(url, headers=headers, timeout=10)
+                response.raise_for_status()
+            except Exception as e:
+                self.log(f"   ⚠️ Не удалось подключиться к eBay: {str(e)}")
+                return
 
-            soup = BeautifulSoup(response.content, 'html.parser')
+            try:
+                soup = BeautifulSoup(response.content, 'html.parser')
+            except Exception as e:
+                self.log(f"   ⚠️ Ошибка парсинга HTML: {str(e)}")
+                return
 
             # Ищем карточки товаров
             items = soup.find_all('div', {'class': 's-item'})
@@ -138,19 +146,28 @@ class EbayMonitorWeb:
                     if not price_elem:
                         continue
                     price_text = price_elem.get_text(strip=True)
-                    price = float(re.sub(r'[^\d.]', '', price_text.split()[0]))
+                    try:
+                        price = float(re.sub(r'[^\d.]', '', price_text.split()[0]))
+                    except:
+                        continue
 
                     # Ставки
                     bids_elem = item.find('span', {'class': 's-item__bids'})
                     bids = 0
                     if bids_elem:
-                        bids_text = bids_elem.get_text(strip=True)
-                        bids = int(re.sub(r'[^\d]', '', bids_text.split()[0]))
+                        try:
+                            bids_text = bids_elem.get_text(strip=True)
+                            bids = int(re.sub(r'[^\d]', '', bids_text.split()[0]))
+                        except:
+                            bids = 0
 
                     # Ссылка
                     link_elem = item.find('a', {'class': 's-item__link'})
                     item_url = link_elem['href'] if link_elem else ''
-                    item_id = re.search(r'/itm/(\d+)', item_url).group(1) if item_url else ''
+                    try:
+                        item_id = re.search(r'/itm/(\d+)', item_url).group(1) if item_url else ''
+                    except:
+                        item_id = ''
 
                     if price >= min_price and price <= max_price and bids >= min_bids:
                         auction_id = f"{title}_{item_id}"
@@ -166,8 +183,6 @@ class EbayMonitorWeb:
             if found_count == 0:
                 self.log(f"   Подходящих аукционов не найдено")
 
-        except requests.exceptions.RequestException as e:
-            self.log(f"❌ Ошибка подключения: {str(e)}")
         except Exception as e:
             self.log(f"❌ Ошибка: {str(e)}")
 
