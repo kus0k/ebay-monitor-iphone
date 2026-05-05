@@ -307,6 +307,11 @@
                 <input type="number" id="interval" value="60">
             </div>
 
+            <div class="form-group">
+                <label>SOCKS5 прокси (опционально)</label>
+                <input type="text" id="socks5_proxy" placeholder="127.0.0.1:1080">
+            </div>
+
             <div class="button-group">
                 <button class="btn-start" id="startBtn" onclick="startMonitoring()">▶ СТАРТ</button>
                 <button class="btn-stop" id="stopBtn" onclick="stopMonitoring()" disabled>⏹ СТОП</button>
@@ -340,15 +345,16 @@
             const max_price = document.getElementById('max_price').value;
             const min_bids = document.getElementById('min_bids').value;
             const interval = document.getElementById('interval').value;
+            const socks5_proxy = document.getElementById('socks5_proxy').value;
 
-            console.log('Parameters:', { keywords, min_price, max_price, min_bids, interval });
+            console.log('Parameters:', { keywords, min_price, max_price, min_bids, interval, socks5_proxy });
 
             try {
                 const response = await fetch('/api/start', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        keywords, min_price, max_price, min_bids, interval
+                        keywords, min_price, max_price, min_bids, interval, socks5_proxy
                     })
                 });
 
