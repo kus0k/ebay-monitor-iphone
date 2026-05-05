@@ -197,32 +197,37 @@ def index():
 
 @app.route('/api/start', methods=['POST'])
 def start():
-    data = request.json
-    keywords = data.get('keywords', '')
-    min_price = float(data.get('min_price', 0))
-    max_price = float(data.get('max_price', 999999))
-    min_bids = int(data.get('min_bids', 1))
-    interval = int(data.get('interval', 60))
+    try:
+        data = request.json
+        keywords = data.get('keywords', '')
+        min_price = float(data.get('min_price', 0))
+        max_price = float(data.get('max_price', 999999))
+        min_bids = int(data.get('min_bids', 1))
+        interval = int(data.get('interval', 60))
 
-    success = monitor.start_monitoring(keywords, min_price, max_price, min_bids, interval)
-    return jsonify({'success': success})
+        success = monitor.start_monitoring(keywords, min_price, max_price, min_bids, interval)
+        return json.dumps({'success': success}, ensure_ascii=False)
+    except Exception as e:
+        return json.dumps({'success': False, 'error': str(e)}, ensure_ascii=False)
 
 @app.route('/api/stop', methods=['POST'])
 def stop():
-    monitor.stop_monitoring()
-    return jsonify({'success': True})
+    try:
+        monitor.stop_monitoring()
+        return json.dumps({'success': True}, ensure_ascii=False)
+    except Exception as e:
+        return json.dumps({'success': False, 'error': str(e)}, ensure_ascii=False)
 
 @app.route('/api/status')
 def status():
-    return app.response_class(
-        response=json.dumps({
+    try:
+        return json.dumps({
             'running': monitor.is_running,
             'logs': monitor.logs[-20:],
             'auctions': monitor.auctions[:10]
-        }, ensure_ascii=False),
-        status=200,
-        mimetype='application/json; charset=utf-8'
-    )
+        }, ensure_ascii=False)
+    except Exception as e:
+        return json.dumps({'error': str(e)}, ensure_ascii=False)
 
 if __name__ == '__main__':
     app.run(debug=False, host='0.0.0.0', port=5000)
