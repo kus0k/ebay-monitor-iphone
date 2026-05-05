@@ -3,11 +3,19 @@ import threading
 import time
 from datetime import datetime
 import requests
+from requests.adapters import HTTPAdapter
 from bs4 import BeautifulSoup
 import sys
 import re
 import json
 import random
+import os
+
+# Поддержка SOCKS5
+try:
+    from requests.packages.urllib3.util.ssl_ import create_urllib3_context
+except ImportError:
+    from urllib3.util.ssl_ import create_urllib3_context
 
 if sys.stdout.encoding != 'utf-8':
     sys.stdout.reconfigure(encoding='utf-8')
@@ -31,6 +39,22 @@ USER_AGENTS = [
 def get_random_user_agent():
     return random.choice(USER_AGENTS)
 
+def get_requests_session(socks5_proxy=None):
+    """Создаёт сессию requests с опциональной поддержкой SOCKS5"""
+    session = requests.Session()
+
+    if socks5_proxy:
+        try:
+            from requests.packages.urllib3.contrib.socks import SOCKSProxyManager
+            session.proxies = {
+                'http': f'socks5://{socks5_proxy}',
+                'https': f'socks5://{socks5_proxy}'
+            }
+        except ImportError:
+            print("SOCKS5 не установлен. Используй: pip install pysocks")
+
+    return session
+
 class EbayMonitorWeb:
     def __init__(self):
         self.is_running = False
@@ -38,6 +62,7 @@ class EbayMonitorWeb:
         self.logs = []
         self.auctions = []
         self.monitor_thread = None
+        self.socks5_proxy = None  # SOCKS5 прокси адрес
 
     def log(self, message):
         timestamp = datetime.now().strftime("%H:%M:%S")
@@ -117,6 +142,9 @@ class EbayMonitorWeb:
             else:
                 self.log(f"🔍 Поиск: ВСЕ аукционы...")
 
+            if self.socks5_proxy:
+                self.log(f"   🔗 Используется SOCKS5: {self.socks5_proxy}")
+
             # Парсим eBay напрямую
             if keyword:
                 url = f"https://www.ebay.com/sch/i.html?_nkw={keyword}&_sop=10"
@@ -134,12 +162,13 @@ class EbayMonitorWeb:
             }
 
             try:
-                response = requests.get(url, headers=headers, timeout=10)
+                session = get_requests_session(self.socks5_proxy)
+                response = session.get(url, headers=headers, timeout=10)
                 response.raise_for_status()
             except Exception as e:
                 self.log(f"   ⚠️ Не удалось подключиться к eBay: {str(e)}")
-                self.log(f"   💡 eBay блокирует облачные серверы. Используй локально или VPN.")
-                self.log(f"   📝 Приложение работает правильно - это ограничение eBay.")
+                if not self.socks5_proxy:
+                    self.log(f"   💡 Попробуй добавить SOCKS5 прокси для обхода блокировки.")
                 return
 
             try:
@@ -229,8 +258,10 @@ def start():
         max_price = float(data.get('max_price', 999999))
         min_bids = int(data.get('min_bids', 1))
         interval = int(data.get('interval', 60))
+        socks5_proxy = data.get('socks5_proxy', '')
 
-        print(f"DEBUG: Calling start_monitoring with: keywords={keywords}, min_price={min_price}, max_price={max_price}, min_bids={min_bids}, interval={interval}")
+        monitor.socks5_proxy = socks5_proxy if socks5_proxy else None
+        print(f"DEBUG: Calling start_monitoring with: keywords={keywords}, min_price={min_price}, max_price={max_price}, min_bids={min_bids}, interval={interval}, socks5_proxy={monitor.socks5_proxy}")
         success = monitor.start_monitoring(keywords, min_price, max_price, min_bids, interval)
         return json.dumps({'success': success}, ensure_ascii=False)
     except Exception as e:
