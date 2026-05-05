@@ -92,7 +92,6 @@ class EbayMonitorWeb:
         self.monitor_thread = None
         self.proxies = []  # Список прокси
         self.current_proxy_index = 0  # Индекс текущего прокси
-        self.proxy_type = 'socks5'  # Тип прокси
         self.ending_time = 1  # Время завершения аукциона в минутах
 
     def log(self, message):
@@ -347,7 +346,6 @@ def start():
         max_price = float(data.get('max_price', 999999))
         min_bids = int(data.get('min_bids', 1))
         interval = int(data.get('interval', 60))
-        proxy_type = data.get('proxy_type', 'http')
         ending_time = int(data.get('ending_time', 1))
         proxies_text = data.get('proxies', '')
 
@@ -372,10 +370,9 @@ def start():
         else:
             monitor.proxies = []
 
-        monitor.proxy_type = proxy_type
         monitor.ending_time = ending_time
 
-        print(f"DEBUG: Calling start_monitoring with: keywords={keywords}, min_price={min_price}, max_price={max_price}, min_bids={min_bids}, interval={interval}, proxy_type={proxy_type}, ending_time={ending_time}, proxies={len(monitor.proxies)}")
+        print(f"DEBUG: Calling start_monitoring with: keywords={keywords}, min_price={min_price}, max_price={max_price}, min_bids={min_bids}, interval={interval}, ending_time={ending_time}, proxies={len(monitor.proxies)}")
         success = monitor.start_monitoring(keywords, min_price, max_price, min_bids, interval)
         return json.dumps({'success': success}, ensure_ascii=False)
     except Exception as e:
