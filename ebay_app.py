@@ -198,11 +198,16 @@ def stop():
 
 @app.route('/api/status')
 def status():
-    return jsonify({
-        'running': monitor.is_running,
-        'logs': monitor.logs[-20:],
-        'auctions': monitor.auctions[:10]
-    })
+    import json
+    return app.response_class(
+        response=json.dumps({
+            'running': monitor.is_running,
+            'logs': monitor.logs[-20:],
+            'auctions': monitor.auctions[:10]
+        }, ensure_ascii=False),
+        status=200,
+        mimetype='application/json; charset=utf-8'
+    )
 
 if __name__ == '__main__':
     app.run(debug=False, host='0.0.0.0', port=5000)
