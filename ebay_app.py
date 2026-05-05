@@ -39,19 +39,26 @@ USER_AGENTS = [
 def get_random_user_agent():
     return random.choice(USER_AGENTS)
 
-def get_requests_session(socks5_proxy=None):
-    """Создаёт сессию requests с опциональной поддержкой SOCKS5"""
+def get_requests_session(proxy=None, proxy_type='socks5'):
+    """Создаёт сессию requests с опциональной поддержкой прокси"""
     session = requests.Session()
 
-    if socks5_proxy:
+    if proxy:
         try:
-            from requests.packages.urllib3.contrib.socks import SOCKSProxyManager
-            session.proxies = {
-                'http': f'socks5://{socks5_proxy}',
-                'https': f'socks5://{socks5_proxy}'
-            }
+            if proxy_type in ['socks4', 'socks5']:
+                from requests.packages.urllib3.contrib.socks import SOCKSProxyManager
+                protocol = 'socks4' if proxy_type == 'socks4' else 'socks5'
+                session.proxies = {
+                    'http': f'{protocol}://{proxy}',
+                    'https': f'{protocol}://{proxy}'
+                }
+            elif proxy_type in ['http', 'https']:
+                session.proxies = {
+                    'http': f'http://{proxy}',
+                    'https': f'https://{proxy}'
+                }
         except ImportError:
-            print("SOCKS5 не установлен. Используй: pip install pysocks")
+            print("SOCKS прокси не установлены. Используй: pip install pysocks")
 
     # Отключаем SSL проверку для работы с ненадежными прокси
     session.verify = False
@@ -69,8 +76,10 @@ class EbayMonitorWeb:
         self.logs = []
         self.auctions = []
         self.monitor_thread = None
-        self.socks5_proxies = []  # Список SOCKS5 прокси
+        self.proxies = []  # Список прокси
         self.current_proxy_index = 0  # Индекс текущего прокси
+        self.proxy_type = 'socks5'  # Тип прокси
+        self.ending_time = 1  # Время завершения аукциона в минутах
 
     def log(self, message):
         timestamp = datetime.now().strftime("%H:%M:%S")
@@ -178,13 +187,13 @@ class EbayMonitorWeb:
             last_error = None
 
             # Пробуем прокси по очереди
-            if self.socks5_proxies:
-                for attempt in range(len(self.socks5_proxies)):
+            if self.proxies:
+                for attempt in range(len(self.proxies)):
                     current_proxy = self.get_next_proxy()
-                    self.log(f"   🔗 Попытка {attempt + 1}: SOCKS5 {current_proxy}")
+                    self.log(f"   🔗 Попытка {attempt + 1}: {self.proxy_type.upper()} {current_proxy}")
 
                     try:
-                        session = get_requests_session(current_proxy)
+                        session = get_requests_session(current_proxy, self.proxy_type)
                         response = session.get(url, headers=headers, timeout=15)
                         response.raise_for_status()
                         self.log(f"   ✓ Прокси работает: {current_proxy}")
@@ -206,7 +215,7 @@ class EbayMonitorWeb:
                     response.raise_for_status()
                 except Exception as e:
                     self.log(f"   ⚠️ Не удалось подключиться к eBay: {str(e)}")
-                    self.log(f"   💡 Попробуй добавить SOCKS5 прокси для обхода блокировки.")
+                    self.log(f"   💡 Попробуй добавить прокси для обхода блокировки.")
                     return
 
             try:
@@ -296,16 +305,21 @@ def start():
         max_price = float(data.get('max_price', 999999))
         min_bids = int(data.get('min_bids', 1))
         interval = int(data.get('interval', 60))
-        socks5_proxies_text = data.get('socks5_proxies', '')
+        proxy_type = data.get('proxy_type', 'socks5')
+        ending_time = int(data.get('ending_time', 1))
+        proxies_text = data.get('proxies', '')
 
         # Парсим список прокси (каждый с новой строки)
-        if socks5_proxies_text.strip():
-            monitor.socks5_proxies = [p.strip() for p in socks5_proxies_text.split('\n') if p.strip()]
+        if proxies_text.strip():
+            monitor.proxies = [p.strip() for p in proxies_text.split('\n') if p.strip()]
             monitor.current_proxy_index = 0
         else:
-            monitor.socks5_proxies = []
+            monitor.proxies = []
 
-        print(f"DEBUG: Calling start_monitoring with: keywords={keywords}, min_price={min_price}, max_price={max_price}, min_bids={min_bids}, interval={interval}, proxies={len(monitor.socks5_proxies)}")
+        monitor.proxy_type = proxy_type
+        monitor.ending_time = ending_time
+
+        print(f"DEBUG: Calling start_monitoring with: keywords={keywords}, min_price={min_price}, max_price={max_price}, min_bids={min_bids}, interval={interval}, proxy_type={proxy_type}, ending_time={ending_time}, proxies={len(monitor.proxies)}")
         success = monitor.start_monitoring(keywords, min_price, max_price, min_bids, interval)
         return json.dumps({'success': success}, ensure_ascii=False)
     except Exception as e:
