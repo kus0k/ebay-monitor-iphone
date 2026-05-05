@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="eBay Monitor">
+    <title>eBay Monitor Pro</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a1a;
+            color: #ffffff;
+            padding: 10px;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 2px solid #ff6b35;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            color: #ff6b35;
+            margin-bottom: 5px;
+        }
+
+        .status {
+            font-size: 14px;
+            color: #888;
+        }
+
+        .status.running {
+            color: #00ff00;
+        }
+
+        .section {
+            background: #2a2a2a;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #ff6b35;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            color: #aaa;
+            margin-bottom: 5px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #444;
+            border-radius: 6px;
+            background: #1a1a1a;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #ff6b35;
+            background: #222;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-start {
+            background: #ff6b35;
+            color: #fff;
+        }
+
+        .btn-start:active {
+            background: #ff5520;
+        }
+
+        .btn-start:disabled {
+            background: #666;
+            color: #999;
+            opacity: 0.5;
+        }
+
+        .btn-stop {
+            background: #ff6b6b;
+            color: #fff;
+        }
+
+        .btn-stop:active {
+            background: #ff5252;
+        }
+
+        .btn-stop:disabled {
+            background: #666;
+            opacity: 0.5;
+        }
+
+        .logs {
+            background: #1a1a1a;
+            border: 1px solid #444;
+            border-radius: 6px;
+            padding: 10px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #00ff00;
+            line-height: 1.4;
+        }
+
+        .log-entry {
+            margin-bottom: 4px;
+        }
+
+        .auctions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .auction-card {
+            background: #1a1a1a;
+            border: 1px solid #ff6b35;
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .auction-card:active {
+            background: #222;
+            border-color: #ff8855;
+        }
+
+        .auction-title {
+            font-weight: bold;
+            color: #ff6b35;
+            margin-bottom: 8px;
+            font-size: 14px;
+            word-break: break-word;
+        }
+
+        .auction-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+
+        .info-item {
+            background: #2a2a2a;
+            padding: 6px;
+            border-radius: 4px;
+        }
+
+        .info-label {
+            color: #888;
+            font-size: 11px;
+        }
+
+        .info-value {
+            color: #00ff00;
+            font-weight: bold;
+        }
+
+        .auction-link {
+            display: block;
+            background: #ff6b35;
+            color: #fff;
+            padding: 8px;
+            border-radius: 4px;
+            text-align: center;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: bold;
+            word-break: break-all;
+        }
+
+        .auction-link:active {
+            background: #ff5520;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #666;
+            padding: 20px;
+            font-size: 14px;
+        }
+
+        .timestamp {
+            font-size: 11px;
+            color: #666;
+            margin-top: 6px;
+        }
+
+        .warning {
+            background: #ff6b35;
+            color: #000;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 5px;
+            }
+
+            .section {
+                padding: 12px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>рџ”Ќ eBay Monitor Pro</h1>
+            <div class="status" id="status">в—Џ РћСЃС‚Р°РЅРѕРІР»РµРЅ</div>
+        </div>
+
+        <!-- API РљР»СЋС‡Рё -->
+        <div class="section">
+            <div class="section-title">рџ”‘ API РљРѕРЅС„РёРіСѓСЂР°С†РёСЏ</div>
+
+            <div class="warning">
+                вљ пёЏ РџРѕР»СѓС‡Рё РєР»СЋС‡Рё РЅР° https://developer.ebay.com
+            </div>
+
+            <div class="form-group">
+                <label>App ID (API Key)</label>
+                <input type="password" id="api_key" placeholder="Р’РІРµРґРё App ID">
+            </div>
+
+            <div class="form-group">
+                <label>Dev ID</label>
+                <input type="password" id="dev_id" placeholder="Р’РІРµРґРё Dev ID">
+            </div>
+
+            <div class="form-group">
+                <label>Cert ID</label>
+                <input type="password" id="cert_id" placeholder="Р’РІРµРґРё Cert ID">
+            </div>
+        </div>
+
+        <!-- РџР°СЂР°РјРµС‚СЂС‹ РїРѕРёСЃРєР° -->
+        <div class="section">
+            <div class="section-title">рџ”Ќ РџР°СЂР°РјРµС‚СЂС‹ РїРѕРёСЃРєР°</div>
+
+            <div class="form-group">
+                <label>РљР»СЋС‡РµРІС‹Рµ СЃР»РѕРІР° (С‡РµСЂРµР· Р·Р°РїСЏС‚СѓСЋ)</label>
+                <input type="text" id="keywords" placeholder="adidas, nike">
+            </div>
+
+            <div class="form-group">
+                <label>РњРёРЅРёРјР°Р»СЊРЅР°СЏ С†РµРЅР° ($)</label>
+                <input type="number" id="min_price" value="50">
+            </div>
+
+            <div class="form-group">
+                <label>РњР°РєСЃРёРјР°Р»СЊРЅР°СЏ С†РµРЅР° ($)</label>
+                <input type="number" id="max_price" value="500">
+            </div>
+
+            <div class="form-group">
+                <label>РњРёРЅРёРјСѓРј СЃС‚Р°РІРѕРє</label>
+                <input type="number" id="min_bids" value="1">
+            </div>
+
+            <div class="form-group">
+                <label>РРЅС‚РµСЂРІР°Р» РїСЂРѕРІРµСЂРєРё (СЃРµРє)</label>
+                <input type="number" id="interval" value="60">
+            </div>
+
+            <div class="button-group">
+                <button class="btn-start" id="startBtn" onclick="startMonitoring()">в–¶ РЎРўРђР Рў</button>
+                <button class="btn-stop" id="stopBtn" onclick="stopMonitoring()" disabled>вЏ№ РЎРўРћРџ</button>
+            </div>
+        </div>
+
+        <!-- Р›РѕРіРё -->
+        <div class="section">
+            <div class="section-title">рџ“‹ Р›РѕРіРё</div>
+            <div class="logs" id="logs">
+                <div class="log-entry">РћР¶РёРґР°РЅРёРµ Р·Р°РїСѓСЃРєР°...</div>
+            </div>
+        </div>
+
+        <!-- РќР°Р№РґРµРЅРЅС‹Рµ Р°СѓРєС†РёРѕРЅС‹ -->
+        <div class="section">
+            <div class="section-title">рџЋЇ РќР°Р№РґРµРЅРЅС‹Рµ Р°СѓРєС†РёРѕРЅС‹</div>
+            <div class="auctions" id="auctions">
+                <div class="empty-state">РђСѓРєС†РёРѕРЅС‹ РїРѕСЏРІСЏС‚СЃСЏ Р·РґРµСЃСЊ</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let statusInterval;
+
+        async function startMonitoring() {
+            const api_key = document.getElementById('api_key').value;
+            const dev_id = document.getElementById('dev_id').value;
+            const cert_id = document.getElementById('cert_id').value;
+            const keywords = document.getElementById('keywords').value;
+            const min_price = document.getElementById('min_price').value;
+            const max_price = document.getElementById('max_price').value;
+            const min_bids = document.getElementById('min_bids').value;
+            const interval = document.getElementById('interval').value;
+
+            if (!api_key || !dev_id || !cert_id) {
+                alert('вќЊ Р’РІРµРґРё РІСЃРµ API РєР»СЋС‡Рё!');
+                return;
+            }
+
+            const response = await fetch('/api/start', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    api_key, dev_id, cert_id, keywords, min_price, max_price, min_bids, interval
+                })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                document.getElementById('startBtn').disabled = true;
+                document.getElementById('stopBtn').disabled = false;
+                statusInterval = setInterval(updateStatus, 1000);
+            } else {
+                alert('вќЊ РћС€РёР±РєР° РїСЂРё Р·Р°РїСѓСЃРєРµ РјРѕРЅРёС‚РѕСЂРёРЅРіР°');
+            }
+        }
+
+        async function stopMonitoring() {
+            await fetch('/api/stop', { method: 'POST' });
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+            clearInterval(statusInterval);
+            updateStatus();
+        }
+
+        async function updateStatus() {
+            const response = await fetch('/api/status');
+            const data = await response.json();
+
+            // РћР±РЅРѕРІР»СЏРµРј СЃС‚Р°С‚СѓСЃ
+            const statusEl = document.getElementById('status');
+            if (data.running) {
+                statusEl.textContent = 'в—Џ Р—Р°РїСѓС‰РµРЅ вњ“';
+                statusEl.classList.add('running');
+            } else {
+                statusEl.textContent = 'в—Џ РћСЃС‚Р°РЅРѕРІР»РµРЅ';
+                statusEl.classList.remove('running');
+            }
+
+            // РћР±РЅРѕРІР»СЏРµРј Р»РѕРіРё
+            const logsEl = document.getElementById('logs');
+            logsEl.innerHTML = data.logs.map(log =>
+                `<div class="log-entry">${log}</div>`
+            ).join('');
+            logsEl.scrollTop = logsEl.scrollHeight;
+
+            // РћР±РЅРѕРІР»СЏРµРј Р°СѓРєС†РёРѕРЅС‹
+            const auctionsEl = document.getElementById('auctions');
+            if (data.auctions.length === 0) {
+                auctionsEl.innerHTML = '<div class="empty-state">РђСѓРєС†РёРѕРЅС‹ РїРѕСЏРІСЏС‚СЃСЏ Р·РґРµСЃСЊ</div>';
+            } else {
+                auctionsEl.innerHTML = data.auctions.map(auction => `
+                    <div class="auction-card">
+                        <div class="auction-title">${auction.title}</div>
+                        <div class="auction-info">
+                            <div class="info-item">
+                                <div class="info-label">рџ’° Р¦РµРЅР°</div>
+                                <div class="info-value">${auction.price}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">рџ“Љ РЎС‚Р°РІРѕРє</div>
+                                <div class="info-value">${auction.bids}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">рџ•ђ РќР°Р№РґРµРЅ</div>
+                                <div class="info-value">${auction.timestamp}</div>
+                            </div>
+                        </div>
+                        <a href="${auction.url}" target="_blank" class="auction-link">РћС‚РєСЂС‹С‚СЊ Р°СѓРєС†РёРѕРЅ</a>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // РћР±РЅРѕРІР»СЏРµРј СЃС‚Р°С‚СѓСЃ РєР°Р¶РґСѓСЋ СЃРµРєСѓРЅРґСѓ
+        updateStatus();
+    </script>
+</body>
+</html>
