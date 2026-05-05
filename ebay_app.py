@@ -62,7 +62,8 @@ class EbayMonitorWeb:
         self.logs = []
         self.auctions = []
         self.monitor_thread = None
-        self.socks5_proxy = None  # SOCKS5 прокси адрес
+        self.socks5_proxies = []  # Список SOCKS5 прокси
+        self.current_proxy_index = 0  # Индекс текущего прокси
 
     def log(self, message):
         timestamp = datetime.now().strftime("%H:%M:%S")
@@ -70,6 +71,14 @@ class EbayMonitorWeb:
         self.logs.append(log_entry)
         if len(self.logs) > 100:
             self.logs.pop(0)
+
+    def get_next_proxy(self):
+        """Получает следующий прокси из списка"""
+        if not self.socks5_proxies:
+            return None
+        proxy = self.socks5_proxies[self.current_proxy_index]
+        self.current_proxy_index = (self.current_proxy_index + 1) % len(self.socks5_proxies)
+        return proxy
 
     def add_auction(self, title, price, bids, url):
         auction = {
@@ -142,8 +151,9 @@ class EbayMonitorWeb:
             else:
                 self.log(f"🔍 Поиск: ВСЕ аукционы...")
 
-            if self.socks5_proxy:
-                self.log(f"   🔗 Используется SOCKS5: {self.socks5_proxy}")
+            current_proxy = self.get_next_proxy()
+            if current_proxy:
+                self.log(f"   🔗 Используется SOCKS5: {current_proxy}")
 
             # Парсим eBay напрямую
             if keyword:
@@ -162,12 +172,12 @@ class EbayMonitorWeb:
             }
 
             try:
-                session = get_requests_session(self.socks5_proxy)
+                session = get_requests_session(current_proxy)
                 response = session.get(url, headers=headers, timeout=10)
                 response.raise_for_status()
             except Exception as e:
                 self.log(f"   ⚠️ Не удалось подключиться к eBay: {str(e)}")
-                if not self.socks5_proxy:
+                if not self.socks5_proxies:
                     self.log(f"   💡 Попробуй добавить SOCKS5 прокси для обхода блокировки.")
                 return
 
@@ -258,10 +268,16 @@ def start():
         max_price = float(data.get('max_price', 999999))
         min_bids = int(data.get('min_bids', 1))
         interval = int(data.get('interval', 60))
-        socks5_proxy = data.get('socks5_proxy', '')
+        socks5_proxies_text = data.get('socks5_proxies', '')
 
-        monitor.socks5_proxy = socks5_proxy if socks5_proxy else None
-        print(f"DEBUG: Calling start_monitoring with: keywords={keywords}, min_price={min_price}, max_price={max_price}, min_bids={min_bids}, interval={interval}, socks5_proxy={monitor.socks5_proxy}")
+        # Парсим список прокси (каждый с новой строки)
+        if socks5_proxies_text.strip():
+            monitor.socks5_proxies = [p.strip() for p in socks5_proxies_text.split('\n') if p.strip()]
+            monitor.current_proxy_index = 0
+        else:
+            monitor.socks5_proxies = []
+
+        print(f"DEBUG: Calling start_monitoring with: keywords={keywords}, min_price={min_price}, max_price={max_price}, min_bids={min_bids}, interval={interval}, proxies={len(monitor.socks5_proxies)}")
         success = monitor.start_monitoring(keywords, min_price, max_price, min_bids, interval)
         return json.dumps({'success': success}, ensure_ascii=False)
     except Exception as e:
