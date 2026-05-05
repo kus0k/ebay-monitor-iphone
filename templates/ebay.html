@@ -271,25 +271,15 @@
 
         <!-- API Ключи -->
         <div class="section">
-            <div class="section-title">🔑 API Конфигурация</div>
+            <div class="section-title">🔑 RapidAPI Конфигурация</div>
 
             <div class="warning">
-                ⚠️ Получи ключи на https://developer.ebay.com
+                ⚠️ Получи ключ на https://rapidapi.com (eBay Search API)
             </div>
 
             <div class="form-group">
-                <label>App ID (API Key)</label>
-                <input type="password" id="api_key" placeholder="Введи App ID">
-            </div>
-
-            <div class="form-group">
-                <label>Dev ID</label>
-                <input type="password" id="dev_id" placeholder="Введи Dev ID">
-            </div>
-
-            <div class="form-group">
-                <label>Cert ID</label>
-                <input type="password" id="cert_id" placeholder="Введи Cert ID">
+                <label>RapidAPI Key</label>
+                <input type="password" id="api_key" placeholder="Введи RapidAPI Key">
             </div>
         </div>
 
@@ -350,16 +340,14 @@
 
         async function startMonitoring() {
             const api_key = document.getElementById('api_key').value;
-            const dev_id = document.getElementById('dev_id').value;
-            const cert_id = document.getElementById('cert_id').value;
             const keywords = document.getElementById('keywords').value;
             const min_price = document.getElementById('min_price').value;
             const max_price = document.getElementById('max_price').value;
             const min_bids = document.getElementById('min_bids').value;
             const interval = document.getElementById('interval').value;
 
-            if (!api_key || !dev_id || !cert_id) {
-                alert('❌ Введи все API ключи!');
+            if (!api_key) {
+                alert('❌ Введи RapidAPI Key!');
                 return;
             }
 
@@ -367,7 +355,7 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    api_key, dev_id, cert_id, keywords, min_price, max_price, min_bids, interval
+                    api_key, keywords, min_price, max_price, min_bids, interval
                 })
             });
 
