@@ -181,12 +181,6 @@ class EbayMonitorWeb:
             else:
                 self.log(f"🔍 Поиск: ВСЕ аукционы...")
 
-            # Парсим eBay напрямую
-            if keyword:
-                url = f"https://www.ebay.com/sch/i.html?_nkw={keyword}&_sop=10"
-            else:
-                url = "https://www.ebay.com/sch/i.html?_sop=10"
-
             headers = {
                 'User-Agent': get_random_user_agent(),
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
@@ -208,6 +202,8 @@ class EbayMonitorWeb:
                     self.log(f"   🔗 Попытка {attempt + 1}/{max_attempts}: {self.proxy_type.upper()} {current_proxy}")
 
                     try:
+                        # Пробуем HTTPS сначала
+                        url = f"https://www.ebay.com/sch/i.html?_nkw={keyword}&_sop=10" if keyword else "https://www.ebay.com/sch/i.html?_sop=10"
                         session = get_requests_session(current_proxy, self.proxy_type)
                         response = session.get(url, headers=headers, timeout=20)
                         response.raise_for_status()
@@ -215,10 +211,19 @@ class EbayMonitorWeb:
                         break
                     except Exception as e:
                         last_error = str(e)
-                        error_msg = last_error[:100] if len(last_error) > 100 else last_error
-                        self.log(f"   ✗ {error_msg}")
-                        time.sleep(2)
-                        continue
+                        # Если HTTPS не работает, пробуем HTTP
+                        try:
+                            url = f"http://www.ebay.com/sch/i.html?_nkw={keyword}&_sop=10" if keyword else "http://www.ebay.com/sch/i.html?_sop=10"
+                            session = get_requests_session(current_proxy, self.proxy_type)
+                            response = session.get(url, headers=headers, timeout=20)
+                            response.raise_for_status()
+                            self.log(f"   ✓ Прокси работает (HTTP): {current_proxy}")
+                            break
+                        except Exception as e2:
+                            error_msg = str(e2)[:100] if len(str(e2)) > 100 else str(e2)
+                            self.log(f"   ✗ {error_msg}")
+                            time.sleep(2)
+                            continue
 
                 if not response:
                     self.log(f"   ❌ Не удалось подключиться через прокси")
@@ -226,6 +231,7 @@ class EbayMonitorWeb:
             else:
                 # Без прокси
                 try:
+                    url = f"https://www.ebay.com/sch/i.html?_nkw={keyword}&_sop=10" if keyword else "https://www.ebay.com/sch/i.html?_sop=10"
                     session = get_requests_session(None)
                     response = session.get(url, headers=headers, timeout=10)
                     response.raise_for_status()
