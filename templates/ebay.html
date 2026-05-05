@@ -333,7 +333,7 @@
     <script>
         let statusInterval;
 
-        async function startMonitoring() {
+        window.startMonitoring = async function() {
             console.log('Start button clicked');
             const keywords = document.getElementById('keywords').value;
             const min_price = document.getElementById('min_price').value;
@@ -367,15 +367,16 @@
                 console.error('Error:', error);
                 alert('❌ Ошибка: ' + error.message);
             }
-        }
+        };
 
-        async function stopMonitoring() {
+        window.stopMonitoring = async function() {
+            console.log('Stop button clicked');
             await fetch('/api/stop', { method: 'POST' });
             document.getElementById('startBtn').disabled = false;
             document.getElementById('stopBtn').disabled = true;
             clearInterval(statusInterval);
             updateStatus();
-        }
+        };
 
         async function updateStatus() {
             const response = await fetch('/api/status');
