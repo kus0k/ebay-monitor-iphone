@@ -271,15 +271,10 @@
 
         <!-- API Ключи -->
         <div class="section">
-            <div class="section-title">🔑 RapidAPI Конфигурация</div>
+            <div class="section-title">🔍 Информация</div>
 
             <div class="warning">
-                ⚠️ Получи ключ на https://rapidapi.com (eBay Search API)
-            </div>
-
-            <div class="form-group">
-                <label>RapidAPI Key</label>
-                <input type="password" id="api_key" placeholder="Введи RapidAPI Key">
+                ✅ Парсинг eBay напрямую - API ключи не требуются!
             </div>
         </div>
 
@@ -339,23 +334,17 @@
         let statusInterval;
 
         async function startMonitoring() {
-            const api_key = document.getElementById('api_key').value;
             const keywords = document.getElementById('keywords').value;
             const min_price = document.getElementById('min_price').value;
             const max_price = document.getElementById('max_price').value;
             const min_bids = document.getElementById('min_bids').value;
             const interval = document.getElementById('interval').value;
 
-            if (!api_key) {
-                alert('❌ Введи RapidAPI Key!');
-                return;
-            }
-
             const response = await fetch('/api/start', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    api_key, keywords, min_price, max_price, min_bids, interval
+                    keywords, min_price, max_price, min_bids, interval
                 })
             });
 
