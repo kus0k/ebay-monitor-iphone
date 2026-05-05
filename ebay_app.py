@@ -205,9 +205,11 @@ def start():
         min_bids = int(data.get('min_bids', 1))
         interval = int(data.get('interval', 60))
 
+        print(f"DEBUG: Calling start_monitoring with: keywords={keywords}, min_price={min_price}, max_price={max_price}, min_bids={min_bids}, interval={interval}")
         success = monitor.start_monitoring(keywords, min_price, max_price, min_bids, interval)
         return json.dumps({'success': success}, ensure_ascii=False)
     except Exception as e:
+        print(f"DEBUG: Error in start(): {str(e)}")
         return json.dumps({'success': False, 'error': str(e)}, ensure_ascii=False)
 
 @app.route('/api/stop', methods=['POST'])
