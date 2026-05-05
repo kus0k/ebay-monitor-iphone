@@ -3,11 +3,10 @@ import threading
 import time
 from datetime import datetime
 import requests
-import re
-import json
+from bs4 import BeautifulSoup
 import sys
+import re
 
-# Устанавливаем UTF-8 кодировку
 if sys.stdout.encoding != 'utf-8':
     sys.stdout.reconfigure(encoding='utf-8')
 
@@ -45,10 +44,6 @@ class EbayMonitorWeb:
         if self.is_running:
             return False
 
-        if not api_key:
-            self.log("❌ Ошибка: Введи RapidAPI Key!")
-            return False
-
         self.is_running = True
         self.logs = []
         self.auctions = []
@@ -69,7 +64,7 @@ class EbayMonitorWeb:
 
         self.monitor_thread = threading.Thread(
             target=self.monitor_loop,
-            args=(api_key, keywords, min_price, max_price, min_bids, interval),
+            args=(keywords, min_price, max_price, min_bids, interval),
             daemon=True
         )
         self.monitor_thread.start()
@@ -79,17 +74,17 @@ class EbayMonitorWeb:
         self.is_running = False
         self.log("\n⏹️  Мониторинг остановлен.\n")
 
-    def monitor_loop(self, api_key, keywords, min_price, max_price, min_bids, interval):
+    def monitor_loop(self, keywords, min_price, max_price, min_bids, interval):
         while self.is_running:
             try:
                 if keywords:
                     for keyword in keywords.split(','):
                         if not self.is_running:
                             break
-                        self.search_ebay(api_key, keyword.strip(), min_price, max_price, min_bids)
+                        self.search_ebay(keyword.strip(), min_price, max_price, min_bids)
                         time.sleep(2)
                 else:
-                    self.search_ebay(api_key, '', min_price, max_price, min_bids)
+                    self.search_ebay('', min_price, max_price, min_bids)
 
                 self.log(f"⏳ Следующая проверка через {interval} сек...\n")
                 time.sleep(interval)
@@ -97,35 +92,30 @@ class EbayMonitorWeb:
                 self.log(f"❌ Ошибка: {str(e)}")
                 time.sleep(5)
 
-    def search_ebay(self, api_key, keyword, min_price, max_price, min_bids):
+    def search_ebay(self, keyword, min_price, max_price, min_bids):
         try:
             if keyword:
                 self.log(f"🔍 Поиск: '{keyword}'...")
             else:
                 self.log(f"🔍 Поиск: ВСЕ аукционы...")
 
-            # RapidAPI Real-Time eBay Data endpoint
-            url = "https://real-time-ebay-data.p.rapidapi.com/search"
+            # Парсим eBay напрямую
+            if keyword:
+                url = f"https://www.ebay.com/sch/i.html?_nkw={keyword}&_sop=10"
+            else:
+                url = "https://www.ebay.com/sch/i.html?_sop=10"
 
             headers = {
-                "x-rapidapi-key": api_key,
-                "x-rapidapi-host": "real-time-ebay-data.p.rapidapi.com"
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
             }
 
-            params = {
-                "q": keyword if keyword else "auction",
-                "pageNumber": "1",
-                "pageSize": "100",
-                "sortBy": "endingSoonest"
-            }
-
-            response = requests.get(url, headers=headers, params=params, timeout=10)
+            response = requests.get(url, headers=headers, timeout=10)
             response.raise_for_status()
 
-            data = response.json()
+            soup = BeautifulSoup(response.content, 'html.parser')
 
-            # Парсим результаты
-            items = data.get('result', [])
+            # Ищем карточки товаров
+            items = soup.find_all('div', {'class': 's-item'})
 
             if not items:
                 self.log(f"   ⚠️ Результаты не найдены")
@@ -136,11 +126,30 @@ class EbayMonitorWeb:
 
             for item in items:
                 try:
-                    title = item.get('title', 'Unknown')
-                    price = float(item.get('price', 0))
-                    bids = int(item.get('bid_count', 0))
-                    item_url = item.get('item_url', '')
-                    item_id = item.get('item_id', '')
+                    # Название
+                    title_elem = item.find('span', {'role': 'heading'})
+                    if not title_elem:
+                        continue
+                    title = title_elem.get_text(strip=True)
+
+                    # Цена
+                    price_elem = item.find('span', {'class': 's-item__price'})
+                    if not price_elem:
+                        continue
+                    price_text = price_elem.get_text(strip=True)
+                    price = float(re.sub(r'[^\d.]', '', price_text.split()[0]))
+
+                    # Ставки
+                    bids_elem = item.find('span', {'class': 's-item__bids'})
+                    bids = 0
+                    if bids_elem:
+                        bids_text = bids_elem.get_text(strip=True)
+                        bids = int(re.sub(r'[^\d]', '', bids_text.split()[0]))
+
+                    # Ссылка
+                    link_elem = item.find('a', {'class': 's-item__link'})
+                    item_url = link_elem['href'] if link_elem else ''
+                    item_id = re.search(r'/itm/(\d+)', item_url).group(1) if item_url else ''
 
                     if price >= min_price and price <= max_price and bids >= min_bids:
                         auction_id = f"{title}_{item_id}"
@@ -157,7 +166,7 @@ class EbayMonitorWeb:
                 self.log(f"   Подходящих аукционов не найдено")
 
         except requests.exceptions.RequestException as e:
-            self.log(f"❌ Ошибка API: {str(e)}")
+            self.log(f"❌ Ошибка подключения: {str(e)}")
         except Exception as e:
             self.log(f"❌ Ошибка: {str(e)}")
 
@@ -173,14 +182,13 @@ def index():
 @app.route('/api/start', methods=['POST'])
 def start():
     data = request.json
-    api_key = data.get('api_key', '')
     keywords = data.get('keywords', '')
     min_price = float(data.get('min_price', 0))
     max_price = float(data.get('max_price', 999999))
     min_bids = int(data.get('min_bids', 1))
     interval = int(data.get('interval', 60))
 
-    success = monitor.start_monitoring(api_key, keywords, min_price, max_price, min_bids, interval)
+    success = monitor.start_monitoring(keywords, min_price, max_price, min_bids, interval)
     return jsonify({'success': success})
 
 @app.route('/api/stop', methods=['POST'])
