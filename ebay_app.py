@@ -107,7 +107,10 @@ class EbayMonitorWeb:
                 url = "https://www.ebay.com/sch/i.html?_sop=10"
 
             headers = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.5',
+                'Referer': 'https://www.ebay.com/'
             }
 
             try:
@@ -115,6 +118,7 @@ class EbayMonitorWeb:
                 response.raise_for_status()
             except Exception as e:
                 self.log(f"   ⚠️ Не удалось подключиться к eBay: {str(e)}")
+                self.log(f"   💡 eBay может блокировать запросы. Попробуй позже.")
                 return
 
             try:
@@ -127,7 +131,7 @@ class EbayMonitorWeb:
             items = soup.find_all('div', {'class': 's-item'})
 
             if not items:
-                self.log(f"   ⚠️ Результаты не найдены")
+                self.log(f"   ⚠️ Результаты не найдены (возможно, eBay блокирует запросы)")
                 return
 
             self.log(f"   ✓ Найдено {len(items)} аукционов")
