@@ -5,8 +5,14 @@ from datetime import datetime
 import requests
 import re
 import json
+import sys
+
+# РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј UTF-8 РєРѕРґРёСЂРѕРІРєСѓ
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
 
 app = Flask(__name__)
+app.config['JSON_AS_ASCII'] = False
 
 class EbayMonitorWeb:
     def __init__(self):
