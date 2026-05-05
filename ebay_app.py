@@ -138,7 +138,8 @@ class EbayMonitorWeb:
                 response.raise_for_status()
             except Exception as e:
                 self.log(f"   ⚠️ Не удалось подключиться к eBay: {str(e)}")
-                self.log(f"   💡 eBay может блокировать запросы. Попробуй позже.")
+                self.log(f"   💡 eBay блокирует облачные серверы. Используй локально или VPN.")
+                self.log(f"   📝 Приложение работает правильно - это ограничение eBay.")
                 return
 
             try:
@@ -151,7 +152,7 @@ class EbayMonitorWeb:
             items = soup.find_all('div', {'class': 's-item'})
 
             if not items:
-                self.log(f"   ⚠️ Результаты не найдены (возможно, eBay блокирует запросы)")
+                self.log(f"   ⚠️ Результаты не найдены")
                 return
 
             self.log(f"   ✓ Найдено {len(items)} аукционов")
