@@ -53,6 +53,13 @@ def get_requests_session(socks5_proxy=None):
         except ImportError:
             print("SOCKS5 не установлен. Используй: pip install pysocks")
 
+    # Отключаем SSL проверку для работы с ненадежными прокси
+    session.verify = False
+
+    # Подавляем предупреждения об SSL
+    import urllib3
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
     return session
 
 class EbayMonitorWeb:
@@ -178,13 +185,14 @@ class EbayMonitorWeb:
 
                     try:
                         session = get_requests_session(current_proxy)
-                        response = session.get(url, headers=headers, timeout=10)
+                        response = session.get(url, headers=headers, timeout=15)
                         response.raise_for_status()
                         self.log(f"   ✓ Прокси работает: {current_proxy}")
                         break
                     except Exception as e:
                         last_error = str(e)
                         self.log(f"   ✗ Ошибка: {last_error[:80]}")
+                        time.sleep(1)
                         continue
 
                 if not response:
