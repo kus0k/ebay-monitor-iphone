@@ -168,7 +168,10 @@ monitor = EbayMonitorWeb()
 
 @app.route('/')
 def index():
-    return render_template('ebay.html')
+    response = render_template('ebay.html')
+    response = app.make_response(response)
+    response.headers['Content-Type'] = 'text/html; charset=utf-8'
+    return response
 
 @app.route('/api/start', methods=['POST'])
 def start():
