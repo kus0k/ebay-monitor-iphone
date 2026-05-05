@@ -185,27 +185,29 @@ class EbayMonitorWeb:
 
             response = None
             last_error = None
+            max_attempts = min(len(self.proxies) * 2, 10) if self.proxies else 1
 
             # Пробуем прокси по очереди
             if self.proxies:
-                for attempt in range(len(self.proxies)):
+                for attempt in range(max_attempts):
                     current_proxy = self.get_next_proxy()
-                    self.log(f"   🔗 Попытка {attempt + 1}: {self.proxy_type.upper()} {current_proxy}")
+                    self.log(f"   🔗 Попытка {attempt + 1}/{max_attempts}: {self.proxy_type.upper()} {current_proxy}")
 
                     try:
                         session = get_requests_session(current_proxy, self.proxy_type)
-                        response = session.get(url, headers=headers, timeout=15)
+                        response = session.get(url, headers=headers, timeout=20)
                         response.raise_for_status()
                         self.log(f"   ✓ Прокси работает: {current_proxy}")
                         break
                     except Exception as e:
                         last_error = str(e)
-                        self.log(f"   ✗ Ошибка: {last_error[:80]}")
-                        time.sleep(1)
+                        error_msg = last_error[:100] if len(last_error) > 100 else last_error
+                        self.log(f"   ✗ {error_msg}")
+                        time.sleep(2)
                         continue
 
                 if not response:
-                    self.log(f"   ❌ Все прокси не работают")
+                    self.log(f"   ❌ Не удалось подключиться через прокси")
                     return
             else:
                 # Без прокси
@@ -214,8 +216,8 @@ class EbayMonitorWeb:
                     response = session.get(url, headers=headers, timeout=10)
                     response.raise_for_status()
                 except Exception as e:
-                    self.log(f"   ⚠️ Не удалось подключиться к eBay: {str(e)}")
-                    self.log(f"   💡 Попробуй добавить прокси для обхода блокировки.")
+                    self.log(f"   ⚠️ Ошибка подключения: {str(e)[:80]}")
+                    self.log(f"   💡 Добавьте рабочие прокси")
                     return
 
             try:
