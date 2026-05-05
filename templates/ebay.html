@@ -353,7 +353,10 @@
                 });
 
                 console.log('Response status:', response.status);
-                const data = await response.json();
+                const text = await response.text();
+                console.log('Response text:', text);
+
+                const data = JSON.parse(text);
                 console.log('Response data:', data);
 
                 if (data.success) {
@@ -361,7 +364,7 @@
                     document.getElementById('stopBtn').disabled = false;
                     statusInterval = setInterval(updateStatus, 1000);
                 } else {
-                    alert('❌ Ошибка при запуске мониторинга');
+                    alert('❌ Ошибка при запуске мониторинга: ' + (data.error || 'Unknown error'));
                 }
             } catch (error) {
                 console.error('Error:', error);
