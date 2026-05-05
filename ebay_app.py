@@ -39,7 +39,7 @@ USER_AGENTS = [
 def get_random_user_agent():
     return random.choice(USER_AGENTS)
 
-def get_requests_session(proxy=None, proxy_type='socks5'):
+def get_requests_session(proxy=None, proxy_type='http'):
     """Создаёт сессию requests с опциональной поддержкой прокси"""
     session = requests.Session()
 
@@ -55,7 +55,7 @@ def get_requests_session(proxy=None, proxy_type='socks5'):
             elif proxy_type in ['http', 'https']:
                 session.proxies = {
                     'http': f'http://{proxy}',
-                    'https': f'https://{proxy}'
+                    'https': f'http://{proxy}'
                 }
         except ImportError:
             print("SOCKS прокси не установлены. Используй: pip install pysocks")
@@ -66,6 +66,20 @@ def get_requests_session(proxy=None, proxy_type='socks5'):
     # Подавляем предупреждения об SSL
     import urllib3
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+    # Добавляем retry стратегию
+    from requests.adapters import HTTPAdapter
+    from urllib3.util.retry import Retry
+
+    retry_strategy = Retry(
+        total=3,
+        backoff_factor=1,
+        status_forcelist=[429, 500, 502, 503, 504],
+        allowed_methods=["HEAD", "GET", "OPTIONS"]
+    )
+    adapter = HTTPAdapter(max_retries=retry_strategy)
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
 
     return session
 
@@ -307,14 +321,28 @@ def start():
         max_price = float(data.get('max_price', 999999))
         min_bids = int(data.get('min_bids', 1))
         interval = int(data.get('interval', 60))
-        proxy_type = data.get('proxy_type', 'socks5')
+        proxy_type = data.get('proxy_type', 'http')
         ending_time = int(data.get('ending_time', 1))
         proxies_text = data.get('proxies', '')
 
-        # Парсим список прокси (каждый с новой строки)
+        # Парсим список прокси (каждый с новой строки или через запятую)
         if proxies_text.strip():
-            monitor.proxies = [p.strip() for p in proxies_text.split('\n') if p.strip()]
+            # Разделяем по новым строкам и запятым
+            raw_proxies = []
+            for line in proxies_text.split('\n'):
+                raw_proxies.extend([p.strip() for p in line.split(',') if p.strip()])
+
+            # Валидируем формат прокси (IP:PORT)
+            monitor.proxies = []
+            for proxy in raw_proxies:
+                if ':' in proxy:
+                    monitor.proxies.append(proxy)
+
+            if not monitor.proxies:
+                return json.dumps({'success': False, 'error': 'Нет валидных прокси в формате IP:PORT'}, ensure_ascii=False)
+
             monitor.current_proxy_index = 0
+            monitor.log(f"✓ Загружено {len(monitor.proxies)} прокси")
         else:
             monitor.proxies = []
 
