@@ -41,7 +41,7 @@ class EbayMonitorWeb:
         if len(self.auctions) > 50:
             self.auctions.pop()
 
-    def start_monitoring(self, api_key, keywords, min_price, max_price, min_bids, interval):
+    def start_monitoring(self, keywords, min_price, max_price, min_bids, interval):
         if self.is_running:
             return False
 
