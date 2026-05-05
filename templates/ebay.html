@@ -346,15 +346,6 @@
 
             <div class="form-row">
                 <div class="form-group">
-                    <label>Тип прокси</label>
-                    <select id="proxy_type">
-                        <option value="http">HTTP</option>
-                        <option value="https">HTTPS</option>
-                        <option value="socks5">SOCKS5</option>
-                        <option value="socks4">SOCKS4</option>
-                    </select>
-                </div>
-                <div class="form-group">
                     <label>Время завершения (мин)</label>
                     <input type="number" id="ending_time" value="1" min="1">
                 </div>
@@ -398,18 +389,17 @@
             const max_price = document.getElementById('max_price').value;
             const min_bids = document.getElementById('min_bids').value;
             const interval = document.getElementById('interval').value;
-            const proxy_type = document.getElementById('proxy_type').value;
             const ending_time = document.getElementById('ending_time').value;
             const proxies = document.getElementById('proxies').value;
 
-            console.log('Parameters:', { keywords, min_price, max_price, min_bids, interval, proxy_type, ending_time, proxies });
+            console.log('Parameters:', { keywords, min_price, max_price, min_bids, interval, ending_time, proxies });
 
             try {
                 const response = await fetch('/api/start', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        keywords, min_price, max_price, min_bids, interval, proxy_type, ending_time, proxies
+                        keywords, min_price, max_price, min_bids, interval, ending_time, proxies
                     })
                 });
 
