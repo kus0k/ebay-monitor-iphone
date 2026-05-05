@@ -16,7 +16,7 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #1a1a1a;
+            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
             color: #ffffff;
             padding: 10px;
         }
@@ -28,127 +28,155 @@
 
         .header {
             text-align: center;
-            padding: 20px 0;
-            border-bottom: 2px solid #ff6b35;
+            padding: 25px 0;
+            background: linear-gradient(135deg, #ff6b35 0%, #ff8555 100%);
+            border-radius: 15px;
             margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(255, 107, 53, 0.3);
         }
 
         .header h1 {
-            font-size: 28px;
-            color: #ff6b35;
-            margin-bottom: 5px;
+            font-size: 32px;
+            color: #fff;
+            margin-bottom: 8px;
+            font-weight: 700;
         }
 
         .status {
             font-size: 14px;
-            color: #888;
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 500;
         }
 
         .status.running {
-            color: #00ff00;
+            color: #4ade80;
+            font-weight: 600;
         }
 
         .section {
-            background: #2a2a2a;
-            border-radius: 10px;
-            padding: 15px;
+            background: linear-gradient(135deg, #2a2a2a 0%, #252525 100%);
+            border-radius: 15px;
+            padding: 20px;
             margin-bottom: 15px;
+            border: 1px solid rgba(255, 107, 53, 0.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         }
 
         .section-title {
             font-size: 16px;
-            font-weight: bold;
+            font-weight: 700;
             color: #ff6b35;
-            margin-bottom: 12px;
+            margin-bottom: 15px;
             display: flex;
             align-items: center;
             gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .form-group {
-            margin-bottom: 12px;
+            margin-bottom: 15px;
         }
 
         .form-group label {
             display: block;
             font-size: 13px;
             color: #aaa;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
+            font-weight: 600;
         }
 
-        .form-group input {
+        .form-group input,
+        .form-group select {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #444;
-            border-radius: 6px;
+            padding: 12px;
+            border: 2px solid #444;
+            border-radius: 8px;
             background: #1a1a1a;
             color: #fff;
             font-size: 14px;
+            transition: all 0.3s;
         }
 
-        .form-group input:focus {
+        .form-group input:focus,
+        .form-group select:focus {
             outline: none;
             border-color: #ff6b35;
             background: #222;
+            box-shadow: 0 0 10px rgba(255, 107, 53, 0.2);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
         }
 
         .button-group {
             display: flex;
             gap: 10px;
-            margin-top: 15px;
+            margin-top: 20px;
         }
 
         button {
             flex: 1;
-            padding: 12px;
+            padding: 14px;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             font-size: 14px;
-            font-weight: bold;
+            font-weight: 700;
             cursor: pointer;
             transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .btn-start {
-            background: #ff6b35;
+            background: linear-gradient(135deg, #ff6b35 0%, #ff8555 100%);
             color: #fff;
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
         }
 
         .btn-start:active {
-            background: #ff5520;
+            transform: scale(0.98);
+            box-shadow: 0 2px 8px rgba(255, 107, 53, 0.2);
         }
 
         .btn-start:disabled {
             background: #666;
             color: #999;
             opacity: 0.5;
+            cursor: not-allowed;
         }
 
         .btn-stop {
-            background: #ff6b6b;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff8585 100%);
             color: #fff;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
         }
 
         .btn-stop:active {
-            background: #ff5252;
+            transform: scale(0.98);
+            box-shadow: 0 2px 8px rgba(255, 107, 107, 0.2);
         }
 
         .btn-stop:disabled {
             background: #666;
             opacity: 0.5;
+            cursor: not-allowed;
         }
 
         .logs {
             background: #1a1a1a;
-            border: 1px solid #444;
-            border-radius: 6px;
-            padding: 10px;
-            height: 200px;
+            border: 2px solid #444;
+            border-radius: 8px;
+            padding: 12px;
+            height: 220px;
             overflow-y: auto;
             font-family: 'Courier New', monospace;
             font-size: 12px;
-            color: #00ff00;
-            line-height: 1.4;
+            color: #4ade80;
+            line-height: 1.5;
         }
 
         .log-entry {
@@ -158,93 +186,92 @@
         .auctions {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 12px;
         }
 
         .auction-card {
-            background: #1a1a1a;
-            border: 1px solid #ff6b35;
-            border-radius: 8px;
-            padding: 12px;
+            background: linear-gradient(135deg, #1a1a1a 0%, #222 100%);
+            border: 2px solid #ff6b35;
+            border-radius: 10px;
+            padding: 14px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s;
         }
 
         .auction-card:active {
-            background: #222;
+            background: linear-gradient(135deg, #222 0%, #2a2a2a 100%);
             border-color: #ff8855;
+            transform: scale(0.98);
         }
 
         .auction-title {
-            font-weight: bold;
+            font-weight: 700;
             color: #ff6b35;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             font-size: 14px;
             word-break: break-word;
         }
 
         .auction-info {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr;
             gap: 8px;
             font-size: 12px;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }
 
         .info-item {
             background: #2a2a2a;
-            padding: 6px;
-            border-radius: 4px;
+            padding: 8px;
+            border-radius: 6px;
+            border-left: 3px solid #ff6b35;
         }
 
         .info-label {
             color: #888;
             font-size: 11px;
+            font-weight: 600;
         }
 
         .info-value {
-            color: #00ff00;
-            font-weight: bold;
+            color: #4ade80;
+            font-weight: 700;
+            margin-top: 2px;
         }
 
         .auction-link {
             display: block;
-            background: #ff6b35;
+            background: linear-gradient(135deg, #ff6b35 0%, #ff8555 100%);
             color: #fff;
-            padding: 8px;
-            border-radius: 4px;
+            padding: 10px;
+            border-radius: 6px;
             text-align: center;
             text-decoration: none;
             font-size: 12px;
-            font-weight: bold;
+            font-weight: 700;
             word-break: break-all;
+            transition: all 0.3s;
         }
 
         .auction-link:active {
-            background: #ff5520;
+            transform: scale(0.98);
         }
 
         .empty-state {
             text-align: center;
             color: #666;
-            padding: 20px;
+            padding: 30px 20px;
             font-size: 14px;
         }
 
-        .timestamp {
-            font-size: 11px;
-            color: #666;
-            margin-top: 6px;
-        }
-
         .warning {
-            background: #ff6b35;
+            background: linear-gradient(135deg, #ff6b35 0%, #ff8555 100%);
             color: #000;
-            padding: 10px;
-            border-radius: 6px;
-            margin-bottom: 10px;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
             font-size: 12px;
-            font-weight: bold;
+            font-weight: 700;
         }
 
         @media (max-width: 480px) {
@@ -253,11 +280,19 @@
             }
 
             .section {
-                padding: 12px;
+                padding: 15px;
             }
 
             .header h1 {
-                font-size: 24px;
+                font-size: 26px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .auction-info {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -287,29 +322,47 @@
                 <input type="text" id="keywords" placeholder="adidas, nike">
             </div>
 
-            <div class="form-group">
-                <label>Минимальная цена ($)</label>
-                <input type="number" id="min_price" value="50">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Минимальная цена ($)</label>
+                    <input type="number" id="min_price" value="50">
+                </div>
+                <div class="form-group">
+                    <label>Максимальная цена ($)</label>
+                    <input type="number" id="max_price" value="500">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Минимум ставок</label>
+                    <input type="number" id="min_bids" value="1">
+                </div>
+                <div class="form-group">
+                    <label>Интервал проверки (сек)</label>
+                    <input type="number" id="interval" value="60">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Тип прокси</label>
+                    <select id="proxy_type">
+                        <option value="socks5">SOCKS5</option>
+                        <option value="socks4">SOCKS4</option>
+                        <option value="http">HTTP</option>
+                        <option value="https">HTTPS</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Время завершения (мин)</label>
+                    <input type="number" id="ending_time" value="1" min="1">
+                </div>
             </div>
 
             <div class="form-group">
-                <label>Максимальная цена ($)</label>
-                <input type="number" id="max_price" value="500">
-            </div>
-
-            <div class="form-group">
-                <label>Минимум ставок</label>
-                <input type="number" id="min_bids" value="1">
-            </div>
-
-            <div class="form-group">
-                <label>Интервал проверки (сек)</label>
-                <input type="number" id="interval" value="60">
-            </div>
-
-            <div class="form-group">
-                <label>SOCKS5 прокси (каждый с новой строки)</label>
-                <textarea id="socks5_proxies" placeholder="127.0.0.1:1080&#10;192.168.1.1:1080&#10;10.0.0.1:1080" style="width: 100%; height: 100px; padding: 10px; border: 1px solid #444; border-radius: 6px; background: #1a1a1a; color: #fff; font-size: 14px; font-family: 'Courier New', monospace; resize: vertical;"></textarea>
+                <label>Прокси (каждый с новой строки)</label>
+                <textarea id="proxies" placeholder="127.0.0.1:1080&#10;192.168.1.1:1080&#10;10.0.0.1:1080" style="width: 100%; height: 100px; padding: 12px; border: 2px solid #444; border-radius: 8px; background: #1a1a1a; color: #fff; font-size: 14px; font-family: 'Courier New', monospace; resize: vertical; transition: all 0.3s;" onFocus="this.style.borderColor='#ff6b35'; this.style.boxShadow='0 0 10px rgba(255, 107, 53, 0.2)'" onBlur="this.style.borderColor='#444'; this.style.boxShadow='none'"></textarea>
             </div>
 
             <div class="button-group">
@@ -345,16 +398,18 @@
             const max_price = document.getElementById('max_price').value;
             const min_bids = document.getElementById('min_bids').value;
             const interval = document.getElementById('interval').value;
-            const socks5_proxies = document.getElementById('socks5_proxies').value;
+            const proxy_type = document.getElementById('proxy_type').value;
+            const ending_time = document.getElementById('ending_time').value;
+            const proxies = document.getElementById('proxies').value;
 
-            console.log('Parameters:', { keywords, min_price, max_price, min_bids, interval, socks5_proxies });
+            console.log('Parameters:', { keywords, min_price, max_price, min_bids, interval, proxy_type, ending_time, proxies });
 
             try {
                 const response = await fetch('/api/start', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        keywords, min_price, max_price, min_bids, interval, socks5_proxies
+                        keywords, min_price, max_price, min_bids, interval, proxy_type, ending_time, proxies
                     })
                 });
 
